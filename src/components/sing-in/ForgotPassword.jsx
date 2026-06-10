@@ -20,7 +20,12 @@ function ForgotPassword({ open, handleClose }) {
             event.preventDefault();
             handleClose();
           },
-          sx: { backgroundImage: 'none' },
+          sx: {
+                background: 'linear-gradient(180deg, #3a261b, #2b1d14)', 
+                color: '#f5e9d3', 
+                borderRadius: 3,
+                paddingBottom: 2,
+           },
         },
       }}
     >
@@ -28,11 +33,20 @@ function ForgotPassword({ open, handleClose }) {
       <DialogContent
         sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}
       >
-        <DialogContentText>
+        <DialogContentText sx={{ color: '#f5e9d3' }}>
           Enter your account&apos;s email address, and we&apos;ll send you a link to
           reset your password.
         </DialogContentText>
         <OutlinedInput
+          sx={{
+            color: '#f5e9d3',
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#d2b79c',
+            },
+            '&:hover .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#f5e9d3',
+            },
+          }}
           autoFocus
           required
           margin="dense"
