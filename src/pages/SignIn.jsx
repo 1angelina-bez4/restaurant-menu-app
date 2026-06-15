@@ -4,7 +4,6 @@ import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import CssBaseline from '@mui/material/CssBaseline';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import Divider from '@mui/material/Divider';
 import FormLabel from '@mui/material/FormLabel';
 import FormControl from '@mui/material/FormControl';
 import Link from '@mui/material/Link';
@@ -13,27 +12,50 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
+
 import ForgotPassword from '../components/sing-in/ForgotPassword.jsx';
 import AppTheme from '../shared-theme/AppTheme';
 import ColorModeSelect from '../shared-theme/ColorModeSelect';
 import { RestaurantLogoIcon } from '../components/sing-in/RestaurantLogoIcon.jsx';
 
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
+
+// Получение профиля
+export async function getUserProfile(userId) {
+  const { data: profileData, error: profileError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .single();
+
+  console.log("PROFILE DATA:", profileData);
+  console.log("PROFILE ERROR:", profileError);
+
+  if (profileError) {
+    return null;
+  }
+
+  return profileData;
+}
+
+// Стили
 const Card = styled(MuiCard)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  alignSelf: 'center',
-  width: '100%',
+  display: "flex",
+  flexDirection: "column",
+  alignSelf: "center",
+  width: "100%",
   padding: theme.spacing(4),
   gap: theme.spacing(2),
-  margin: 'auto',
-  [theme.breakpoints.up('sm')]: {
-    maxWidth: '450px',
+  margin: "auto",
+  [theme.breakpoints.up("sm")]: {
+    maxWidth: "450px",
   },
   boxShadow:
-    'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
-  ...theme.applyStyles('dark', {
+    "hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px",
+  ...theme.applyStyles("dark", {
     boxShadow:
-      'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px',
+      "hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px",
   }),
 }));
 
@@ -60,33 +82,81 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
   },
 }));
 
+
+/// Компонент SignIn
 export default function SignIn(props) {
+  const navigate = useNavigate();
+
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [open, setOpen] = React.useState(false);
 
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
 
-  const handleClose = () => {
-    setOpen(false);
-  };
+  // Вход + проверка роли
+const handleSubmit = async (event) => {
+  event.preventDefault();
 
-  const handleSubmit = (event) => {
-    if (emailError || passwordError) {
-      event.preventDefault();
+  const form = new FormData(event.currentTarget);
+
+  const email = String(form.get("email") || "").trim();
+  const password = String(form.get("password") || "").trim();
+
+  if (!email || !password) {
+    setEmailError(!email);
+    setPasswordError(!password);
+
+    setEmailErrorMessage(!email ? "Введите email" : "");
+    setPasswordErrorMessage(!password ? "Введите пароль" : "");
+
+    return;
+  }
+
+  try {
+    const { data: authData, error: authError } =
+    await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    console.log("LOGIN DATA:", data);
+    console.log("LOGIN ERROR:", error);
+
+    if (error) {
+      setPasswordError(true);
+      setPasswordErrorMessage(error.message);
       return;
     }
-    const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
-  };
 
+    console.log("USER ID:", data.user.id);
+
+    const profile = await getUserProfile(data.user.id);
+
+    console.log("PROFILE:", profile);
+
+    if (!profile) {
+      setPasswordError(true);
+      setPasswordErrorMessage("Профиль не найден");
+      return;
+    }
+
+    if (profile.role_id === 2) {
+      navigate("/admin");
+    } else {
+      navigate("/menu");
+    }
+  } catch (err) {
+    console.error("UNEXPECTED ERROR:", err);
+
+    setPasswordError(true);
+    setPasswordErrorMessage("Ошибка входа");
+  }
+};
+
+
+
+  // Валидация
   const validateInputs = () => {
     const email = document.getElementById('email');
     const password = document.getElementById('password');
@@ -114,15 +184,17 @@ export default function SignIn(props) {
     return isValid;
   };
 
+
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <SignInContainer direction="column" sx={{ justifyContent: 'space-between' }}>
         <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
+
         <Card variant="outlined">
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
-          <RestaurantLogoIcon />
-        </Box>
+            <RestaurantLogoIcon />
+          </Box>
 
           <Typography
             component="h1"
@@ -131,6 +203,7 @@ export default function SignIn(props) {
           >
             Sign in
           </Typography>
+
           <Box
             component="form"
             onSubmit={handleSubmit}
@@ -140,7 +213,7 @@ export default function SignIn(props) {
               flexDirection: 'column',
               width: '100%',
               gap: 2,
-              textAlign: 'left', 
+              textAlign: 'left',
             }}
           >
             <FormControl>
@@ -151,7 +224,6 @@ export default function SignIn(props) {
                 id="email"
                 type="email"
                 name="email"
-                placeholder="your@email.com"
                 autoComplete="email"
                 autoFocus
                 required
@@ -160,53 +232,51 @@ export default function SignIn(props) {
                 color={emailError ? 'error' : 'primary'}
               />
             </FormControl>
+
             <FormControl>
               <FormLabel htmlFor="password">Password</FormLabel>
               <TextField
                 error={passwordError}
                 helperText={passwordErrorMessage}
                 name="password"
-                placeholder="••••••"
                 type="password"
                 id="password"
                 autoComplete="current-password"
-                autoFocus
                 required
                 fullWidth
                 variant="outlined"
                 color={passwordError ? 'error' : 'primary'}
               />
             </FormControl>
+
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
               label="Remember me"
             />
-            <ForgotPassword open={open} handleClose={handleClose} />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              onClick={validateInputs}
-            >
+
+            <ForgotPassword open={open} handleClose={() => setOpen(false)} />
+
+            <Button type="submit" fullWidth variant="contained">
               Sign in
             </Button>
+
             <Link
               component="button"
               type="button"
-              onClick={handleClickOpen}
+              onClick={() => setOpen(true)}
               variant="body2"
               sx={{ alignSelf: 'center' }}
             >
               Forgot your password?
             </Link>
           </Box>
+
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography sx={{ textAlign: 'center' }}>
               Don&apos;t have an account?{' '}
               <Link href="/signup" variant="body2">
-              Sign up
+                Sign up
               </Link>
-
             </Typography>
           </Box>
         </Card>

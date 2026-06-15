@@ -114,12 +114,13 @@ export default function SignUp(props) {
 
   if (!validateInputs()) return;
 
-  const data = new FormData(event.currentTarget);
-  const email = data.get("email");
-  const password = data.get("password");
-  const name = data.get("name");
-
-  const { error } = await supabase.auth.signUp({
+  const form = new FormData(event.currentTarget);
+  const email = form.get("email");
+  const password = form.get("password");
+  const name = form.get("name");
+  
+  // 1. Создаём пользователя
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -133,8 +134,28 @@ export default function SignUp(props) {
     return;
   }
 
+  // 2. Создаём профиль в таблице profiles
+  await supabase.from("profiles").insert({
+    id: data.user.id,
+    full_name: name,
+    role_id: 1, // user
+  });
+
+  // 3. Переход на Sign In
   navigate("/signin");
+
+  console.log("SIGNUP DATA:", data);
+
+  const { error: profileError } = await supabase.from("profiles").insert({
+  id: data.user?.id,
+  full_name: name,
+  role_id: 1,
+});
+
+console.log("PROFILE INSERT ERROR:", profileError);
+
 };
+
 
 
   return (
@@ -219,7 +240,6 @@ export default function SignUp(props) {
               type="submit"
               fullWidth
               variant="contained"
-              onClick={validateInputs}
             >
               Sign up
             </Button>
