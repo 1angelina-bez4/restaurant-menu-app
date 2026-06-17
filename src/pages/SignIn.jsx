@@ -95,7 +95,7 @@ export default function SignIn(props) {
 
 
   // Вход + проверка роли
-const handleSubmit = async (event) => {
+  const handleSubmit = async (event) => {
   event.preventDefault();
 
   const form = new FormData(event.currentTarget);
@@ -114,38 +114,44 @@ const handleSubmit = async (event) => {
   }
 
   try {
-    const { data: authData, error: authError } =
+  const { data: authData, error: authError } =
     await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    console.log("LOGIN DATA:", data);
-    console.log("LOGIN ERROR:", error);
+  console.log("LOGIN DATA:", authData);
+  console.log("LOGIN ERROR:", authError);
 
-    if (error) {
-      setPasswordError(true);
-      setPasswordErrorMessage(error.message);
-      return;
-    }
+  if (authError) {
+    setPasswordError(true);
+    setPasswordErrorMessage(authError.message);
+    return;
+  }
 
-    console.log("USER ID:", data.user.id);
+  if (!authData?.user) {
+    setPasswordError(true);
+    setPasswordErrorMessage("Пользователь не найден");
+    return;
+  }
 
-    const profile = await getUserProfile(data.user.id);
+  console.log("USER ID:", authData.user.id);
 
-    console.log("PROFILE:", profile);
+  const profile = await getUserProfile(authData.user.id);
 
-    if (!profile) {
-      setPasswordError(true);
-      setPasswordErrorMessage("Профиль не найден");
-      return;
-    }
+  console.log("PROFILE:", profile);
 
-    if (profile.role_id === 2) {
-      navigate("/admin");
-    } else {
-      navigate("/menu");
-    }
+  if (!profile) {
+    setPasswordError(true);
+    setPasswordErrorMessage("Профиль не найден");
+    return;
+  }
+
+  if (profile.role_id === 2) {
+    navigate("/admin");
+  } else {
+    navigate("/menu");
+  }
   } catch (err) {
     console.error("UNEXPECTED ERROR:", err);
 
