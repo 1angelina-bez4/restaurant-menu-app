@@ -11,9 +11,11 @@ import CreateProductDialog from "../components/CreateProductDialog";
 import CreateDishDialog from "../components/CreateDishDialog";
 import { useDishes } from "../hooks/useDishes";
 import RecipeDialog from "../components/RecipeDialog";
+import EditDishPriceDialog from "../components/EditDishPriceDialog";
 import {
   Box,
   Typography,
+  CircularProgress,
 } from "@mui/material";
 
 export default function MenuPage() {
@@ -35,14 +37,12 @@ export default function MenuPage() {
   } = useDishes();
   const [roleId, setRoleId] = useState(null);
 
-  const [openEditProduct, setOpenEditProduct] =
-    useState(false);
-
-  const [editingProduct, setEditingProduct] =
-    useState(null);
-
-  const [openCreateDish, setOpenCreateDish] =
-  useState(false);
+  const [openEditProduct, setOpenEditProduct] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [openCreateDish, setOpenCreateDish] =  useState(false);
+  const [openPriceDialog, setOpenPriceDialog] = useState(false);
+  const [editingDish, setEditingDish] = useState(null);
+  const [openEditDishPrice, setOpenEditDishPrice] = useState(false);
 
   const [newDish, setNewDish] = useState({
     name: "",
@@ -67,6 +67,34 @@ export default function MenuPage() {
     image_url: "",
   });
 
+   const handleEditDishPrice = (dish) => {
+  setEditingDish({ ...dish });
+  setOpenEditDishPrice(true);
+};
+
+const handleSaveDishPrice = async () => {
+  
+
+  const { data, error } = await supabase
+    .from("dishes")
+    .update({
+      price: Number(editingDish.price),
+    })
+    .eq("id", editingDish.id)
+    .select();
+
+  console.log("data:", data);
+  console.log("error:", error);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  await loadDishes();
+
+  setOpenEditDishPrice(false);
+};
   useEffect(() => {
     async function loadData() {
       const {
@@ -93,6 +121,7 @@ export default function MenuPage() {
 
     loadData();
   }, []);
+
 
 const handleEditProduct = (product) => {
   if (roleId !== 2 && roleId !== 4) return;
@@ -238,9 +267,22 @@ const handleSaveProduct = async () => {
 
 if (loading) {
   return (
-    <Typography sx={{ p: 4 }}>
-      Загрузка...
-    </Typography>
+    <Box
+      sx={{
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background:
+          "radial-gradient(circle at center, #2a211d 0%, #141010 100%)",
+      }}
+    >
+      <CircularProgress
+        sx={{
+          color: "#b65c20",
+        }}
+      />
+    </Box>
   );
 }
   return (
@@ -294,13 +336,14 @@ if (loading) {
           }}
         >
           {dishes.map((dish) => (
-            <DishCard
+           <DishCard
             key={dish.id}
             dish={dish}
             roleId={roleId}
             onDetails={openDishDetails}
             onDelete={handleDeleteDish}
             onEditRecipe={handleEditRecipe}
+            onEditPrice={handleEditDishPrice}
           />
           ))}
         </Box>
@@ -389,6 +432,13 @@ if (loading) {
       onClose={() => setOpenRecipeDialog(false)}
       dish={selectedRecipeDish}
       loadDishes={loadDishes}
+    />
+    <EditDishPriceDialog
+      open={openEditDishPrice}
+      onClose={() => setOpenEditDishPrice(false)}
+      dish={editingDish}
+      setDish={setEditingDish}
+      onSave={handleSaveDishPrice}
     />
     </Box>
   );

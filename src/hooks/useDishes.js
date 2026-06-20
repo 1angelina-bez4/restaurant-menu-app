@@ -23,7 +23,10 @@ export function useDishes() {
     const { data: dishesData } =
       await supabase
         .from("dishes")
-        .select("*");
+        .select("*")
+        .order("name", {
+          ascending: true,
+        });
 
     const { data: dishProducts } =
       await supabase

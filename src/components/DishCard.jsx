@@ -12,6 +12,7 @@ export default function DishCard({
   onDetails,
   onDelete,
   onEditRecipe,
+  onEditPrice,
 }) {
   return (
     <Card
@@ -88,6 +89,23 @@ export default function DishCard({
           onClick={() => onDelete(dish.id)}
         >
           Удалить
+        </Button>
+      )}
+
+      {roleId === 2 && (
+        <Button
+          fullWidth
+          variant="contained"
+          sx={{
+            mb: 1,
+            background: "#b65c20",
+            "&:hover": {
+              background: "#cc6c2c",
+            },
+          }}
+          onClick={() => onEditPrice(dish)}
+        >
+          Изменить цену
         </Button>
       )}
 
