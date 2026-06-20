@@ -8,7 +8,9 @@ import Fab from "@mui/material/Fab";
 import AddIcon from "@mui/icons-material/Add";
 import EditProductDialog from "../components/EditProductDialog";
 import CreateProductDialog from "../components/CreateProductDialog";
+import CreateDishDialog from "../components/CreateDishDialog";
 import { useDishes } from "../hooks/useDishes";
+import RecipeDialog from "../components/RecipeDialog";
 import {
   Box,
   Typography,
@@ -18,26 +20,8 @@ export default function MenuPage() {
   const [products, setProducts] = useState([]);
   const [selected, setSelected] = useState("dishes");
   const [loading, setLoading] = useState(true);
-
-  const [roleId, setRoleId] = useState(null);
-
-  const [openEditProduct, setOpenEditProduct] =
-    useState(false);
-
-  const [editingProduct, setEditingProduct] =
-    useState(null);
-
-  const [openCreateProduct, setOpenCreateProduct] =
-    useState(false);
-
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    weight: "",
-    calories: "",
-    price: "",
-    created_at: "",
-    image_url: "",
-  });
+  const [openRecipeDialog, setOpenRecipeDialog] = useState(false);
+  const [selectedRecipeDish, setSelectedRecipeDish] = useState(null);
 
   const {
     dishes,
@@ -47,7 +31,41 @@ export default function MenuPage() {
     ingredients,
     totalWeight,
     openDishDetails,
+    loadDishes,
   } = useDishes();
+  const [roleId, setRoleId] = useState(null);
+
+  const [openEditProduct, setOpenEditProduct] =
+    useState(false);
+
+  const [editingProduct, setEditingProduct] =
+    useState(null);
+
+  const [openCreateDish, setOpenCreateDish] =
+  useState(false);
+
+  const [newDish, setNewDish] = useState({
+    name: "",
+    description: "",
+    price: "",
+    image_url: "",
+  });
+
+  const [openCreateProduct, setOpenCreateProduct] =
+    useState(false);
+
+    const handleEditRecipe = (dish) => {
+      setSelectedRecipeDish(dish);
+      setOpenRecipeDialog(true);
+    };
+  const [newProduct, setNewProduct] = useState({
+    name: "",
+    weight: "",
+    calories: "",
+    price: "",
+    created_at: "",
+    image_url: "",
+  });
 
   useEffect(() => {
     async function loadData() {
@@ -167,6 +185,57 @@ const handleSaveProduct = async () => {
   setOpenCreateProduct(false);
   };
 
+  const handleDeleteDish = async (id) => {
+  if (roleId !== 2) return;
+
+  if (!window.confirm("Удалить блюдо?")) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from("dishes")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  await loadDishes();
+};
+  const handleCreateDish = async () => {
+  const { data, error } = await supabase
+    .from("dishes")
+    .insert([
+      {
+        name: newDish.name,
+        description: newDish.description,
+        price: newDish.price,
+        image_url: newDish.image_url,
+        created_at: new Date().toISOString(),
+      },
+    ])
+    .select()
+    .single();
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  await loadDishes();
+
+  setNewDish({
+    name: "",
+    description: "",
+    price: "",
+    image_url: "",
+  });
+
+  setOpenCreateDish(false);
+};
+
 if (loading) {
   return (
     <Typography sx={{ p: 4 }}>
@@ -226,10 +295,13 @@ if (loading) {
         >
           {dishes.map((dish) => (
             <DishCard
-              key={dish.id}
-              dish={dish}
-              onDetails={openDishDetails}
-            />
+            key={dish.id}
+            dish={dish}
+            roleId={roleId}
+            onDetails={openDishDetails}
+            onDelete={handleDeleteDish}
+            onEditRecipe={handleEditRecipe}
+          />
           ))}
         </Box>
       ) : (
@@ -279,26 +351,45 @@ if (loading) {
       newProduct={newProduct}
       setNewProduct={setNewProduct}
       onSave={handleCreateProduct}
+      />
+      <CreateDishDialog
+    open={openCreateDish}
+    onClose={() => setOpenCreateDish(false)}
+    newDish={newDish}
+    setNewDish={setNewDish}
+    onSave={handleCreateDish}
     />
       </Box>
       {/* Кнопка создания продукта */}
-      {selected === "products" &&
-      (roleId === 2 || roleId === 4) && (
+      {(roleId === 2 || roleId === 4) && (
         <Fab
-          color="primary"
-          sx={{
-            position: "fixed",
-            bottom: 30,
-            right: 30,
-          }}
-          onClick={(e) => {
-            e.currentTarget.blur();
+        sx={{
+          position: "fixed",
+          bottom: 30,
+          right: 30,
+          background: "#b65c20",
+
+          "&:hover": {
+            background: "#cc6c2c",
+          },
+        }}
+        onClick={() => {
+          if (selected === "products") {
             setOpenCreateProduct(true);
-          }}
-        >
-          <AddIcon />
-        </Fab>
-      )}
+          } else if (selected === "dishes") {
+            setOpenCreateDish(true);
+          }
+        }}
+      >
+        <AddIcon />
+      </Fab>
+  )}
+    <RecipeDialog
+      open={openRecipeDialog}
+      onClose={() => setOpenRecipeDialog(false)}
+      dish={selectedRecipeDish}
+      loadDishes={loadDishes}
+    />
     </Box>
   );
 }

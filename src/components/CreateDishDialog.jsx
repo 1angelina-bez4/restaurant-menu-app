@@ -1,21 +1,19 @@
-import TextField from "@mui/material/TextField";
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Button,
+  TextField,
 } from "@mui/material";
 
-export default function EditProductDialog({
+export default function CreateDishDialog({
   open,
   onClose,
-  editingProduct,
-  setEditingProduct,
+  newDish,
+  setNewDish,
   onSave,
 }) {
-  if (!editingProduct) return null;
-
   const fieldStyles = {
     "& .MuiOutlinedInput-root": {
       color: "#fff",
@@ -56,13 +54,11 @@ export default function EditProductDialog({
       slotProps={{
         paper: {
           sx: {
-            borderRadius: 4,
-            overflow: "hidden",
             background:
               "linear-gradient(180deg,#2a1814 0%,#1a0f0c 100%)",
+            borderRadius: 4,
             border: "1px solid rgba(255,255,255,0.08)",
             color: "#fff",
-            boxShadow: "0 10px 40px rgba(0,0,0,.5)",
           },
         },
       }}
@@ -74,7 +70,7 @@ export default function EditProductDialog({
           fontSize: "2rem",
         }}
       >
-        Редактирование продукта
+        Создание блюда
       </DialogTitle>
 
       <DialogContent>
@@ -82,11 +78,11 @@ export default function EditProductDialog({
           fullWidth
           margin="normal"
           label="Название"
-          value={editingProduct.name || ""}
+          value={newDish.name}
           sx={fieldStyles}
           onChange={(e) =>
-            setEditingProduct({
-              ...editingProduct,
+            setNewDish({
+              ...newDish,
               name: e.target.value,
             })
           }
@@ -95,14 +91,15 @@ export default function EditProductDialog({
         <TextField
           fullWidth
           margin="normal"
-          label="Калории"
-          type="number"
-          value={editingProduct.calories || ""}
+          label="Описание"
+          multiline
+          rows={3}
+          value={newDish.description}
           sx={fieldStyles}
           onChange={(e) =>
-            setEditingProduct({
-              ...editingProduct,
-              calories: e.target.value,
+            setNewDish({
+              ...newDish,
+              description: e.target.value,
             })
           }
         />
@@ -112,11 +109,11 @@ export default function EditProductDialog({
           margin="normal"
           label="Цена"
           type="number"
-          value={editingProduct.price || ""}
+          value={newDish.price}
           sx={fieldStyles}
           onChange={(e) =>
-            setEditingProduct({
-              ...editingProduct,
+            setNewDish({
+              ...newDish,
               price: e.target.value,
             })
           }
@@ -126,11 +123,11 @@ export default function EditProductDialog({
           fullWidth
           margin="normal"
           label="URL картинки"
-          value={editingProduct.image_url || ""}
+          value={newDish.image_url}
           sx={fieldStyles}
           onChange={(e) =>
-            setEditingProduct({
-              ...editingProduct,
+            setNewDish({
+              ...newDish,
               image_url: e.target.value,
             })
           }
@@ -160,7 +157,7 @@ export default function EditProductDialog({
             },
           }}
         >
-          Сохранить
+          Создать
         </Button>
       </DialogActions>
     </Dialog>

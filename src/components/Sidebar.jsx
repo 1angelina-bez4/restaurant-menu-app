@@ -52,18 +52,18 @@ export default function Sidebar({
           🍽 Блюда
         </Button>
 
-        {roleId === 2 && (
-          <Button
-            variant={
-              selected === "products"
-                ? "contained"
-                : "outlined"
-            }
-            onClick={() => onChange("products")}
-          >
-            🥬 Продукты
-          </Button>
-        )}
+        {(roleId === 2 || roleId === 4) && (
+        <Button
+          variant={
+            selected === "products"
+              ? "contained"
+              : "outlined"
+          }
+          onClick={() => onChange("products")}
+        >
+          🥬 Продукты
+        </Button>
+      )}
       </Stack>
       <Button
         variant="outlined"

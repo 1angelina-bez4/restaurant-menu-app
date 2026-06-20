@@ -8,7 +8,10 @@ import {
 
 export default function DishCard({
   dish,
+  roleId,
   onDetails,
+  onDelete,
+  onEditRecipe,
 }) {
   return (
     <Card
@@ -76,16 +79,35 @@ export default function DishCard({
           {dish.price} ₽
         </Typography>
 
+        {roleId === 2 && (
+        <Button
+          fullWidth
+          variant="contained"
+          color="error"
+          sx={{ mb: 1 }}
+          onClick={() => onDelete(dish.id)}
+        >
+          Удалить
+        </Button>
+      )}
+
+      {roleId === 4 && (
         <Button
           fullWidth
           variant="contained"
           sx={{
             mb: 1,
             background: "#b65c20",
+
+            "&:hover": {
+              background: "#cc6c2c",
+            },
           }}
+          onClick={() => onEditRecipe(dish)}
         >
-          Добавить
+          Состав блюда
         </Button>
+      )}
 
         <Button
           fullWidth
