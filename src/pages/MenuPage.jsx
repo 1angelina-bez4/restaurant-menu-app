@@ -4,14 +4,18 @@ import Sidebar from "../components/Sidebar";
 import DishCard from "../components/DishCard";
 import DishDetailsDialog from "../components/DishDetailsDialog";
 import ProductCard from "../components/ProductCard";
+import OrdersGrid from "../components/OrdersGrid";
+import OrderCheckoutModal from "../components/OrderCheckoutModal";
 import Fab from "@mui/material/Fab";
 import AddIcon from "@mui/icons-material/Add";
 import EditProductDialog from "../components/EditProductDialog";
 import CreateProductDialog from "../components/CreateProductDialog";
 import CreateDishDialog from "../components/CreateDishDialog";
 import { useDishes } from "../hooks/useDishes";
+import { useOrders } from "../hooks/useOrders";
 import RecipeDialog from "../components/RecipeDialog";
 import EditDishPriceDialog from "../components/EditDishPriceDialog";
+import AIChat from '../components/AIChat';
 import {
   Box,
   Typography,
@@ -24,6 +28,10 @@ export default function MenuPage() {
   const [loading, setLoading] = useState(true);
   const [openRecipeDialog, setOpenRecipeDialog] = useState(false);
   const [selectedRecipeDish, setSelectedRecipeDish] = useState(null);
+  const [showChat, setShowChat] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [forceUpdateKey, setForceUpdateKey] = useState(0);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const {
     dishes,
@@ -35,11 +43,21 @@ export default function MenuPage() {
     openDishDetails,
     loadDishes,
   } = useDishes();
+
+  const {
+    orders,
+    loadOrders,
+    addToOrder,
+    removeFromOrder,
+    updateOrderQuantity,
+    createOrder,
+  } = useOrders();
+
   const [roleId, setRoleId] = useState(null);
 
   const [openEditProduct, setOpenEditProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [openCreateDish, setOpenCreateDish] =  useState(false);
+  const [openCreateDish, setOpenCreateDish] = useState(false);
   const [openPriceDialog, setOpenPriceDialog] = useState(false);
   const [editingDish, setEditingDish] = useState(null);
   const [openEditDishPrice, setOpenEditDishPrice] = useState(false);
@@ -51,13 +69,13 @@ export default function MenuPage() {
     image_url: "",
   });
 
-  const [openCreateProduct, setOpenCreateProduct] =
-    useState(false);
+  const [openCreateProduct, setOpenCreateProduct] = useState(false);
 
-    const handleEditRecipe = (dish) => {
-      setSelectedRecipeDish(dish);
-      setOpenRecipeDialog(true);
-    };
+  const handleEditRecipe = (dish) => {
+    setSelectedRecipeDish(dish);
+    setOpenRecipeDialog(true);
+  };
+
   const [newProduct, setNewProduct] = useState({
     name: "",
     weight: "",
@@ -67,34 +85,54 @@ export default function MenuPage() {
     image_url: "",
   });
 
-   const handleEditDishPrice = (dish) => {
-  setEditingDish({ ...dish });
-  setOpenEditDishPrice(true);
-};
+  const handleEditDishPrice = (dish) => {
+    setEditingDish({ ...dish });
+    setOpenEditDishPrice(true);
+  };
 
-const handleSaveDishPrice = async () => {
-  
+  const handleSaveDishPrice = async () => {
+    const { data, error } = await supabase
+      .from("dishes")
+      .update({
+        price: Number(editingDish.price),
+      })
+      .eq("id", editingDish.id)
+      .select();
 
-  const { data, error } = await supabase
-    .from("dishes")
-    .update({
-      price: Number(editingDish.price),
-    })
-    .eq("id", editingDish.id)
-    .select();
+    if (error) {
+      console.error(error);
+      return;
+    }
 
-  console.log("data:", data);
-  console.log("error:", error);
+    await loadDishes();
+    setOpenEditDishPrice(false);
+  };
 
-  if (error) {
-    console.error(error);
-    return;
-  }
+  const handleAddToOrder = async (dish) => {
+    const success = await addToOrder(dish.id);
+    if (success) {
+      await loadOrders();
+    }
+  };
 
-  await loadDishes();
+  const handleUpdateQuantity = async (cartItemId, newQuantity) => {
+    if (newQuantity <= 0) {
+      await removeFromOrder(cartItemId);
+    } else {
+      await updateOrderQuantity(cartItemId, newQuantity);
+    }
+    await loadOrders();
+    setForceUpdateKey(prev => prev + 1);
+  };
 
-  setOpenEditDishPrice(false);
-};
+  const handleCheckout = async (orderData) => {
+    const success = await createOrder(orderData);
+    if (success) {
+      setCheckoutOpen(false);
+      await loadOrders();
+    }
+  };
+
   useEffect(() => {
     async function loadData() {
       const {
@@ -102,6 +140,7 @@ const handleSaveDishPrice = async () => {
       } = await supabase.auth.getUser();
 
       if (user) {
+        setUserId(user.id);
         const { data: profile } = await supabase
           .from("profiles")
           .select("role_id")
@@ -122,39 +161,36 @@ const handleSaveDishPrice = async () => {
     loadData();
   }, []);
 
+  const handleEditProduct = (product) => {
+    if (roleId !== 2 && roleId !== 4) return;
 
-const handleEditProduct = (product) => {
-  if (roleId !== 2 && roleId !== 4) return;
+    setEditingProduct(product);
+    setOpenEditProduct(true);
+  };
 
-  setEditingProduct(product);
-  setOpenEditProduct(true);
-};
+  const handleSaveProduct = async () => {
+    if (roleId !== 2 && roleId !== 4) return;
 
-const handleSaveProduct = async () => {
-  if (roleId !== 2 && roleId !== 4) return;
+    const { error } = await supabase
+      .from("products")
+      .update({
+        name: editingProduct.name,
+        calories: editingProduct.calories,
+        price: editingProduct.price,
+        image_url: editingProduct.image_url,
+      })
+      .eq("id", editingProduct.id);
 
-  const { error } = await supabase
-    .from("products")
-    .update({
-      name: editingProduct.name,
-      calories: editingProduct.calories,
-      price: editingProduct.price,
-      image_url: editingProduct.image_url,
-    })
-    .eq("id", editingProduct.id);
+    if (error) {
+      console.error(error);
+      return;
+    }
 
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  setProducts((prev) =>
-    prev.map((p) =>
-      p.id === editingProduct.id
-        ? editingProduct
-        : p
-    )
-  );
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === editingProduct.id ? editingProduct : p
+      )
+    );
 
     setOpenEditProduct(false);
   };
@@ -176,137 +212,128 @@ const handleSaveProduct = async () => {
       return;
     }
 
-    setProducts((prev) =>
-      prev.filter((p) => p.id !== id)
-    );
+    setProducts((prev) => prev.filter((p) => p.id !== id));
   };
+
   const handleCreateProduct = async () => {
-  const { data, error } = await supabase
-  .from("products")
-  .insert([
-    {
-      name: newProduct.name,
-      weight: newProduct.weight,
-      calories: newProduct.calories,
-      price: newProduct.price,
-      created_at: new Date().toISOString(),
-      image_url: newProduct.image_url,
-    },
-  ])
-  .select()
-  .single();
+    const { data, error } = await supabase
+      .from("products")
+      .insert([
+        {
+          name: newProduct.name,
+          weight: newProduct.weight,
+          calories: newProduct.calories,
+          price: newProduct.price,
+          created_at: new Date().toISOString(),
+          image_url: newProduct.image_url,
+        },
+      ])
+      .select()
+      .single();
 
-  if (error) {
-    console.error(error);
-    return;
-  }
+    if (error) {
+      console.error(error);
+      return;
+    }
 
-  setProducts((prev) => [...prev, data]);
+    setProducts((prev) => [...prev, data]);
 
-  setNewProduct({
-    name: "",
-    weight: "",
-    calories: "",
-    price: "",
-    image_url: "",
-  });
+    setNewProduct({
+      name: "",
+      weight: "",
+      calories: "",
+      price: "",
+      image_url: "",
+    });
 
-  setOpenCreateProduct(false);
+    setOpenCreateProduct(false);
   };
 
   const handleDeleteDish = async (id) => {
-  if (roleId !== 2) return;
+    if (roleId !== 2) return;
 
-  if (!window.confirm("Удалить блюдо?")) {
-    return;
-  }
+    if (!window.confirm("Удалить блюдо?")) {
+      return;
+    }
 
-  const { error } = await supabase
-    .from("dishes")
-    .delete()
-    .eq("id", id);
+    const { error } = await supabase
+      .from("dishes")
+      .delete()
+      .eq("id", id);
 
-  if (error) {
-    console.error(error);
-    return;
-  }
+    if (error) {
+      console.error(error);
+      return;
+    }
 
-  await loadDishes();
-};
+    await loadDishes();
+  };
+
   const handleCreateDish = async () => {
-  const { data, error } = await supabase
-    .from("dishes")
-    .insert([
-      {
-        name: newDish.name,
-        description: newDish.description,
-        price: newDish.price,
-        image_url: newDish.image_url,
-        created_at: new Date().toISOString(),
-      },
-    ])
-    .select()
-    .single();
+    const { data, error } = await supabase
+      .from("dishes")
+      .insert([
+        {
+          name: newDish.name,
+          description: newDish.description,
+          price: newDish.price,
+          image_url: newDish.image_url,
+          created_at: new Date().toISOString(),
+        },
+      ])
+      .select()
+      .single();
 
-  if (error) {
-    console.error(error);
-    return;
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    await loadDishes();
+
+    setNewDish({
+      name: "",
+      description: "",
+      price: "",
+      image_url: "",
+    });
+
+    setOpenCreateDish(false);
+  };
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+           background: "linear-gradient(180deg, #2a1f1a 0%, #1a0f0c 100%)",
+        }}
+      >
+        <CircularProgress sx={{ color: "#b65c20" }} />
+      </Box>
+    );
   }
 
-  await loadDishes();
-
-  setNewDish({
-    name: "",
-    description: "",
-    price: "",
-    image_url: "",
-  });
-
-  setOpenCreateDish(false);
-};
-
-if (loading) {
-  return (
-    <Box
-      sx={{
-        height: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background:
-          "radial-gradient(circle at center, #2a211d 0%, #141010 100%)",
-      }}
-    >
-      <CircularProgress
-        sx={{
-          color: "#b65c20",
-        }}
-      />
-    </Box>
-  );
-}
   return (
     <Box
       sx={{
         display: "flex",
         height: "100vh",
-        background:
-          "radial-gradient(circle at center, #2a211d 0%, #141010 100%)",
+         background: "linear-gradient(180deg, #2a1f1a 0%, #1a0f0c 100%)",
         color: "#fff",
       }}
     >
-      {/* Левая часть */}
-      <Sidebar
-        selected={selected}
-        onChange={setSelected}
-        roleId={roleId}
-      />
-      {/* Правая часть */}
+      <Sidebar selected={selected} onChange={setSelected} roleId={roleId} />
+
       <Box
         sx={{
           flex: 1,
           p: 4,
           overflowY: "auto",
+          background: "linear-gradient(180deg, #2a1f1a 0%, #1a0f0c 100%) !important",
         }}
       >
         <Typography
@@ -319,47 +346,56 @@ if (loading) {
         >
           {selected === "dishes"
             ? "Меню ресторана"
+            : selected === "orders"
+            ? "Мои заказы"
             : "Склад продуктов"}
         </Typography>
 
-        {/* Карточки блюд */}
         {selected === "dishes" ? (
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              sm: "repeat(2, 1fr)",
-              md: "repeat(3, 1fr)",
-            },
-            gap: 3,
-          }}
-        >
-          {dishes.map((dish) => (
-           <DishCard
-            key={dish.id}
-            dish={dish}
-            roleId={roleId}
-            onDetails={openDishDetails}
-            onDelete={handleDeleteDish}
-            onEditRecipe={handleEditRecipe}
-            onEditPrice={handleEditDishPrice}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(3, 1fr)",
+              },
+              gap: 3,
+            }}
+          >
+            {dishes.map((dish) => (
+              <DishCard
+                key={dish.id}
+                dish={dish}
+                roleId={roleId}
+                onDetails={openDishDetails}
+                onDelete={handleDeleteDish}
+                onEditRecipe={handleEditRecipe}
+                onEditPrice={handleEditDishPrice}
+                onAddToOrder={handleAddToOrder}
+              />
+            ))}
+          </Box>
+        ) : selected === "orders" ? (
+          <OrdersGrid
+            key={forceUpdateKey}
+            orders={orders}
+            onUpdateQuantity={handleUpdateQuantity}
+            onCheckout={() => setCheckoutOpen(true)}
           />
-          ))}
-        </Box>
-      ) : (
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              sm: "repeat(2, 1fr)",
-              md: "repeat(3, 1fr)",
-            },
-            gap: 3,
-          }}
-        >
-          {products.map((product) => (
+        ) : (
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(3, 1fr)",
+              },
+              gap: 3,
+            }}
+          >
+            {products.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}
@@ -368,78 +404,109 @@ if (loading) {
                 onDelete={handleDeleteProduct}
               />
             ))}
-        </Box>
-        
-      )}
-        {/* Модальное окно */}
-        <DishDetailsDialog
-        open={openDetails}
-        onClose={() =>
-          setOpenDetails(false)
-        }
-        selectedDish={selectedDish}
-        ingredients={ingredients}
-        totalWeight={totalWeight}
-      />
-      <EditProductDialog
-        open={openEditProduct}
-        onClose={() => setOpenEditProduct(false)}
-        editingProduct={editingProduct}
-        setEditingProduct={setEditingProduct}
-        onSave={handleSaveProduct}
-      />
-      <CreateProductDialog
-      open={openCreateProduct}
-      onClose={() => setOpenCreateProduct(false)}
-      newProduct={newProduct}
-      setNewProduct={setNewProduct}
-      onSave={handleCreateProduct}
-      />
-      <CreateDishDialog
-    open={openCreateDish}
-    onClose={() => setOpenCreateDish(false)}
-    newDish={newDish}
-    setNewDish={setNewDish}
-    onSave={handleCreateDish}
-    />
-      </Box>
-      {/* Кнопка создания продукта */}
-      {(roleId === 2 || roleId === 4) && (
-        <Fab
-        sx={{
-          position: "fixed",
-          bottom: 30,
-          right: 30,
-          background: "#b65c20",
+          </Box>
+        )}
 
-          "&:hover": {
-            background: "#cc6c2c",
-          },
-        }}
-        onClick={() => {
-          if (selected === "products") {
-            setOpenCreateProduct(true);
-          } else if (selected === "dishes") {
-            setOpenCreateDish(true);
-          }
-        }}
-      >
-        <AddIcon />
-      </Fab>
-  )}
-    <RecipeDialog
-      open={openRecipeDialog}
-      onClose={() => setOpenRecipeDialog(false)}
-      dish={selectedRecipeDish}
-      loadDishes={loadDishes}
-    />
-    <EditDishPriceDialog
-      open={openEditDishPrice}
-      onClose={() => setOpenEditDishPrice(false)}
-      dish={editingDish}
-      setDish={setEditingDish}
-      onSave={handleSaveDishPrice}
-    />
+        <DishDetailsDialog
+          open={openDetails}
+          onClose={() => setOpenDetails(false)}
+          selectedDish={selectedDish}
+          ingredients={ingredients}
+          totalWeight={totalWeight}
+        />
+
+        <EditProductDialog
+          open={openEditProduct}
+          onClose={() => setOpenEditProduct(false)}
+          editingProduct={editingProduct}
+          setEditingProduct={setEditingProduct}
+          onSave={handleSaveProduct}
+        />
+
+        <CreateProductDialog
+          open={openCreateProduct}
+          onClose={() => setOpenCreateProduct(false)}
+          newProduct={newProduct}
+          setNewProduct={setNewProduct}
+          onSave={handleCreateProduct}
+        />
+
+        <CreateDishDialog
+          open={openCreateDish}
+          onClose={() => setOpenCreateDish(false)}
+          newDish={newDish}
+          setNewDish={setNewDish}
+          onSave={handleCreateDish}
+        />
+
+        <RecipeDialog
+          open={openRecipeDialog}
+          onClose={() => setOpenRecipeDialog(false)}
+          dish={selectedRecipeDish}
+          loadDishes={loadDishes}
+        />
+
+        <EditDishPriceDialog
+          open={openEditDishPrice}
+          onClose={() => setOpenEditDishPrice(false)}
+          dish={editingDish}
+          setDish={setEditingDish}
+          onSave={handleSaveDishPrice}
+        />
+
+        <OrderCheckoutModal
+          open={checkoutOpen}
+          onClose={() => setCheckoutOpen(false)}
+          onConfirm={handleCheckout}
+          total={orders.reduce(
+            (sum, item) => sum + (item.dishes?.price || 0) * item.quantity,
+            0
+          )}
+          items={orders.map((item) => ({
+            dish: item.dishes,
+            quantity: item.quantity,
+          }))}
+        />
+
+        {(roleId === 1 || roleId === 2) && (
+          <Fab
+            sx={{
+              position: "fixed",
+              bottom: 100,
+              right: 30,
+              background: "#b65c20",
+              "&:hover": { background: "#cc6c2c" },
+            }}
+            onClick={() => setShowChat(!showChat)}
+          >
+            {showChat ? "✕" : "💬"}
+          </Fab>
+        )}
+
+        {(roleId === 2 || roleId === 4) && (
+          <Fab
+            sx={{
+              position: "fixed",
+              bottom: 30,
+              right: 30,
+              background: "#b65c20",
+              "&:hover": { background: "#cc6c2c" },
+            }}
+            onClick={() => {
+              if (selected === "products") {
+                setOpenCreateProduct(true);
+              } else if (selected === "dishes") {
+                setOpenCreateDish(true);
+              }
+            }}
+          >
+            <AddIcon />
+          </Fab>
+        )}
+        {showChat && userId && (
+          <AIChat userId={userId} agentId="a0c15523-fedd-4bbd-a42a-5437fc832d3c" />
+        )}
+      </Box>
     </Box>
   );
 }

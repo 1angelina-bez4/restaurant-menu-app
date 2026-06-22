@@ -3,6 +3,8 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import MenuPage from "./pages/MenuPage";
 import { Navigate } from "react-router-dom";
+import ProfilePage from './pages/ProfilePage';
+import UsersPage from './pages/UsersPage';
 
 export default function App() {
   return (
@@ -12,7 +14,10 @@ export default function App() {
 
         <Route path="/signin" element={<SignIn />} />
         <Route path="/menu" element={<MenuPage />} />
+        <Route path="/users" element={<UsersPage />} />
          <Route path="/admin" element={<MenuPage />} />
+         <Route path="/profile" element={<ProfilePage />} />
+         
         <Route path="/signup" element={<SignUp />} />
       </Routes>
     </BrowserRouter>

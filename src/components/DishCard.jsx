@@ -4,6 +4,7 @@ import {
   CardMedia,
   Typography,
   Button,
+  Box,
 } from "@mui/material";
 
 export default function DishCard({
@@ -13,17 +14,23 @@ export default function DishCard({
   onDelete,
   onEditRecipe,
   onEditPrice,
+  onAddToOrder,
 }) {
+  const isAdmin = roleId === 2;
+  const isManager = roleId === 1;
+  const isChef = roleId === 4;
+
   return (
     <Card
       sx={{
         maxWidth: 340,
+        height: 560, // ← фиксированная высота
         borderRadius: 4,
         overflow: "hidden",
-        background:
-          "linear-gradient(180deg,#2a1814 0%,#1a0f0c 100%)",
+        display: "flex",
+        flexDirection: "column",
+        background: "linear-gradient(180deg,#2a1814 0%,#1a0f0c 100%)",
         border: "1px solid rgba(255,255,255,0.08)",
-
         "&:hover": {
           transform: "translateY(-4px)",
           transition: "0.3s",
@@ -35,15 +42,31 @@ export default function DishCard({
         height="160"
         image={dish.image_url}
         alt={dish.name}
+        sx={{ flexShrink: 0 }}
       />
 
-      <CardContent>
+      <CardContent
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          p: 2,
+          pb: 1,
+          overflow: "hidden",
+        }}
+      >
         <Typography
           variant="h6"
           sx={{
             fontWeight: 700,
             color: "#fff",
-            mb: 1,
+            mb: 0.5,
+            height: 56,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
           }}
         >
           {dish.name}
@@ -52,8 +75,13 @@ export default function DishCard({
         <Typography
           sx={{
             color: "rgba(255,255,255,0.7)",
-            mb: 2,
-            minHeight: 60,
+            mb: 1,
+            height: 60,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            display: "-webkit-box",
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: "vertical",
           }}
         >
           {dish.description}
@@ -63,77 +91,96 @@ export default function DishCard({
           sx={{
             color: "#fff",
             fontWeight: 600,
-            mb: 1,
+            mb: 0.5,
           }}
         >
-          Общий вес: {dish.totalWeight} г
+          Общий вес: {dish.totalWeight || 0} г
         </Typography>
 
         <Typography
           sx={{
             color: "#ff9d4d",
             fontWeight: 700,
-            fontSize: "1.4rem",
-            mb: 2,
+            fontSize: "1.2rem",
+            mb: 0.5,
           }}
         >
           {dish.price} ₽
         </Typography>
 
-        {roleId === 2 && (
-        <Button
-          fullWidth
-          variant="contained"
-          color="error"
-          sx={{ mb: 1 }}
-          onClick={() => onDelete(dish.id)}
-        >
-          Удалить
-        </Button>
-      )}
+        <Box sx={{ mt: "auto", width: "100%" }}>
+          {isManager && onAddToOrder && (
+            <Button
+              fullWidth
+              variant="contained"
+              sx={{
+                mb: 0.5,
+                background: "#b65c20",
+                "&:hover": { background: "#cc6c2c" },
+              }}
+              onClick={() => onAddToOrder(dish)}
+            >
+              Добавить
+            </Button>
+          )}
 
-      {roleId === 2 && (
-        <Button
-          fullWidth
-          variant="contained"
-          sx={{
-            mb: 1,
-            background: "#b65c20",
-            "&:hover": {
-              background: "#cc6c2c",
-            },
-          }}
-          onClick={() => onEditPrice(dish)}
-        >
-          Изменить цену
-        </Button>
-      )}
+          {isAdmin && (
+            <>
+              <Button
+                fullWidth
+                variant="contained"
+                color="error"
+                sx={{ mb: 0.5 }}
+                onClick={() => onDelete(dish.id)}
+              >
+                Удалить
+              </Button>
+              <Button
+                fullWidth
+                variant="contained"
+                sx={{
+                  mb: 0.5,
+                  background: "#b65c20",
+                  "&:hover": { background: "#cc6c2c" },
+                }}
+                onClick={() => onEditPrice(dish)}
+              >
+                Изменить цену
+              </Button>
+            </>
+          )}
 
-      {roleId === 4 && (
-        <Button
-          fullWidth
-          variant="contained"
-          sx={{
-            mb: 1,
-            background: "#b65c20",
+          {isChef && (
+            <Button
+              fullWidth
+              variant="contained"
+              sx={{
+                mb: 0.5,
+                background: "#b65c20",
+                "&:hover": { background: "#cc6c2c" },
+              }}
+              onClick={() => onEditRecipe(dish)}
+            >
+              Состав блюда
+            </Button>
+          )}
 
-            "&:hover": {
-              background: "#cc6c2c",
-            },
-          }}
-          onClick={() => onEditRecipe(dish)}
-        >
-          Состав блюда
-        </Button>
-      )}
-
-        <Button
-          fullWidth
-          variant="outlined"
-          onClick={() => onDetails(dish)}
-        >
-          Подробнее
-        </Button>
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={() => onDetails(dish)}
+            sx={{
+              borderColor: "rgba(255,255,255,0.3)",
+              color: "#fff",
+              "&:hover": {
+                borderColor: "#ff9d4d",
+                color: "#ff9d4d",
+              },
+            }}
+          >
+            Подробнее
+          </Button>
+        </Box>
       </CardContent>
     </Card>
   );
