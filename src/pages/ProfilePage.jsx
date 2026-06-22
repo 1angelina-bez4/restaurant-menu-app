@@ -347,7 +347,7 @@ export default function ProfilePage() {
               transition: 'all 0.3s ease',
             }}
           >
-            {saving ? 'Сохранение...' : '💾 Сохранить изменения'}
+            {saving ? 'Сохранение...' : ' Сохранить изменения'}
           </Button>
         </Paper>
 
