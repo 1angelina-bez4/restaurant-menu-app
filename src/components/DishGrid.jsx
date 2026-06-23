@@ -15,6 +15,7 @@ export default function DishGrid({
           md: "repeat(3, 1fr)",
         },
         gap: 3,
+        alignItems: "stretch",
       }}
     >
       {dishes.map((dish) => (

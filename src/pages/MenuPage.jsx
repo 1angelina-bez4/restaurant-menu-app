@@ -20,7 +20,16 @@ import {
   Box,
   Typography,
   CircularProgress,
+  TextField,
+  InputAdornment,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Chip,
+  Stack,
 } from "@mui/material";
+import { Search, Sort, FilterList } from "@mui/icons-material";
 
 export default function MenuPage() {
   const [products, setProducts] = useState([]);
@@ -32,6 +41,12 @@ export default function MenuPage() {
   const [userId, setUserId] = useState(null);
   const [forceUpdateKey, setForceUpdateKey] = useState(0);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  // 🔍 НОВЫЕ СОСТОЯНИЯ ДЛЯ ПОИСКА И ФИЛЬТРАЦИИ
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterPrice, setFilterPrice] = useState("all"); // all, low, high
+  const [filterCalories, setFilterCalories] = useState("all"); // all, low, high
+  const [filteredDishes, setFilteredDishes] = useState([]);
 
   const {
     dishes,
@@ -132,6 +147,36 @@ export default function MenuPage() {
       await loadOrders();
     }
   };
+
+  // 🔍 ФИЛЬТРАЦИЯ БЛЮД
+  useEffect(() => {
+    let result = [...dishes];
+
+    // 1. Поиск по названию
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(dish => 
+        dish.name.toLowerCase().includes(query) ||
+        dish.description?.toLowerCase().includes(query)
+      );
+    }
+
+    // 2. Фильтр по цене
+    if (filterPrice === "low") {
+      result = result.sort((a, b) => (a.price || 0) - (b.price || 0));
+    } else if (filterPrice === "high") {
+      result = result.sort((a, b) => (b.price || 0) - (a.price || 0));
+    }
+
+    // 3. Фильтр по калориям
+    if (filterCalories === "low") {
+      result = result.sort((a, b) => (a.calories || 0) - (b.calories || 0));
+    } else if (filterCalories === "high") {
+      result = result.sort((a, b) => (b.calories || 0) - (a.calories || 0));
+    }
+
+    setFilteredDishes(result);
+  }, [dishes, searchQuery, filterPrice, filterCalories]);
 
   useEffect(() => {
     async function loadData() {
@@ -301,6 +346,13 @@ export default function MenuPage() {
     setOpenCreateDish(false);
   };
 
+  // 🔍 Очистка фильтров
+  const clearFilters = () => {
+    setSearchQuery("");
+    setFilterPrice("all");
+    setFilterCalories("all");
+  };
+
   if (loading) {
     return (
       <Box
@@ -309,7 +361,7 @@ export default function MenuPage() {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-           background: "linear-gradient(180deg, #2a1f1a 0%, #1a0f0c 100%)",
+          background: "linear-gradient(180deg, #2a1f1a 0%, #1a0f0c 100%)",
         }}
       >
         <CircularProgress sx={{ color: "#b65c20" }} />
@@ -322,7 +374,7 @@ export default function MenuPage() {
       sx={{
         display: "flex",
         height: "100vh",
-         background: "linear-gradient(180deg, #2a1f1a 0%, #1a0f0c 100%)",
+        background: "linear-gradient(180deg, #2a1f1a 0%, #1a0f0c 100%)",
         color: "#fff",
       }}
     >
@@ -351,6 +403,93 @@ export default function MenuPage() {
             : "Склад продуктов"}
         </Typography>
 
+        {selected === "dishes" && (
+          <>
+            {/* 🔍 Панель поиска и фильтров */}
+            <Box sx={{ mb: 4, display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
+              {/* Поиск */}
+              <TextField
+                placeholder="Поиск блюд..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                sx={{
+                  flex: 1,
+                  minWidth: 200,
+                  '& .MuiOutlinedInput-root': {
+                    color: '#fff',
+                    '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+                    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' },
+                  },
+                }}
+                slotProps={{  
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search sx={{ color: 'rgba(255,255,255,0.5)' }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              {/* Фильтр по цене */}
+              <FormControl sx={{ minWidth: 150 }}>
+                <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>Цена</InputLabel>
+                <Select
+                  value={filterPrice}
+                  onChange={(e) => setFilterPrice(e.target.value)}
+                  sx={{
+                    color: '#fff',
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
+                    '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
+                  }}
+                >
+                  <MenuItem value="all">Все цены</MenuItem>
+                  <MenuItem value="low">Сначала дешевле</MenuItem>
+                  <MenuItem value="high">Сначала дороже</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Фильтр по калориям */}
+              <FormControl sx={{ minWidth: 150 }}>
+                <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>Калории</InputLabel>
+                <Select
+                  value={filterCalories}
+                  onChange={(e) => setFilterCalories(e.target.value)}
+                  sx={{
+                    color: '#fff',
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
+                    '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
+                  }}
+                >
+                  <MenuItem value="all">Все калории</MenuItem>
+                  <MenuItem value="low">Сначала меньше</MenuItem>
+                  <MenuItem value="high">Сначала больше</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Кнопка сброса фильтров */}
+              {(searchQuery || filterPrice !== "all" || filterCalories !== "all") && (
+                <Chip
+                  label="Сбросить фильтры"
+                  onClick={clearFilters}
+                  sx={{
+                    color: '#fff',
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' },
+                  }}
+                  variant="outlined"
+                />
+              )}
+            </Box>
+
+            {/* Информация о количестве блюд */}
+            <Typography sx={{ color: 'rgba(255,255,255,0.5)', mb: 2 }}>
+              Найдено: {filteredDishes.length} блюд
+            </Typography>
+          </>
+        )}
+
         {selected === "dishes" ? (
           <Box
             sx={{
@@ -363,7 +502,7 @@ export default function MenuPage() {
               gap: 3,
             }}
           >
-            {dishes.map((dish) => (
+            {filteredDishes.map((dish) => (
               <DishCard
                 key={dish.id}
                 dish={dish}
@@ -375,6 +514,18 @@ export default function MenuPage() {
                 onAddToOrder={handleAddToOrder}
               />
             ))}
+
+            {/* Если нет результатов */}
+            {filteredDishes.length === 0 && (
+              <Box sx={{ gridColumn: '1 / -1', textAlign: 'center', py: 8 }}>
+                <Typography variant="h5" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+                  🔍 Ничего не найдено
+                </Typography>
+                <Typography sx={{ color: 'rgba(255,255,255,0.3)', mt: 1 }}>
+                  Попробуйте изменить параметры поиска или сбросить фильтры
+                </Typography>
+              </Box>
+            )}
           </Box>
         ) : selected === "orders" ? (
           <OrdersGrid
@@ -468,7 +619,7 @@ export default function MenuPage() {
           }))}
         />
 
-        {(roleId === 1 || roleId === 2) && (
+        {(roleId === 1 || roleId === 2) && !showChat && (
           <Fab
             sx={{
               position: "fixed",
@@ -477,9 +628,9 @@ export default function MenuPage() {
               background: "#b65c20",
               "&:hover": { background: "#cc6c2c" },
             }}
-            onClick={() => setShowChat(!showChat)}
+            onClick={() => setShowChat(true)}
           >
-            {showChat ? "✕" : "💬"}
+            💬
           </Fab>
         )}
 
@@ -504,7 +655,14 @@ export default function MenuPage() {
           </Fab>
         )}
         {showChat && userId && (
-          <AIChat userId={userId} agentId="a0c15523-fedd-4bbd-a42a-5437fc832d3c" />
+          <AIChat 
+            userId={userId} 
+            agentId="a0c15523-fedd-4bbd-a42a-5437fc832d3c" 
+            onClose={() => {
+              console.log('📞 onClose из MenuPage вызван!');
+              setShowChat(false);
+            }}
+          />
         )}
       </Box>
     </Box>

@@ -24,7 +24,7 @@ export default function DishCard({
     <Card
       sx={{
         maxWidth: 340,
-        height: 560, // ← фиксированная высота
+        height: "100%",
         borderRadius: 4,
         overflow: "hidden",
         display: "flex",
@@ -39,7 +39,7 @@ export default function DishCard({
     >
       <CardMedia
         component="img"
-        height="160"
+        height="180"
         image={dish.image_url}
         alt={dish.name}
         sx={{ flexShrink: 0 }}
@@ -50,75 +50,99 @@ export default function DishCard({
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          p: 2,
-          pb: 1,
-          overflow: "hidden",
+          p: 2.5,
         }}
       >
+        {/* Название */}
         <Typography
-          variant="h6"
+          variant="h5"
           sx={{
             fontWeight: 700,
             color: "#fff",
-            mb: 0.5,
-            height: 56,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
+            mb: 1,
+            fontSize: "1.4rem",
+            lineHeight: 1.3,
+            wordBreak: "break-word",
+            overflowWrap: "break-word",
           }}
         >
           {dish.name}
         </Typography>
 
+        {/* Описание */}
         <Typography
           sx={{
-            color: "rgba(255,255,255,0.7)",
-            mb: 1,
-            height: 60,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            display: "-webkit-box",
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: "vertical",
+            color: "rgba(255,255,255,0.75)",
+            mb: 2,
+            fontSize: "1rem",
+            lineHeight: 1.5,
+            wordBreak: "break-word",
+            overflowWrap: "break-word",
           }}
         >
           {dish.description}
         </Typography>
 
-        <Typography
+        {/* Вес и калории */}
+        <Box
           sx={{
-            color: "#fff",
-            fontWeight: 600,
-            mb: 0.5,
+            display: "flex",
+            gap: 2,
+            mb: 1,
+            flexWrap: "wrap",
           }}
         >
-          Общий вес: {dish.totalWeight || 0} г
-        </Typography>
+          <Typography
+            sx={{
+              color: "rgba(255,255,255,0.7)",
+              fontSize: "0.95rem",
+            }}
+          >
+            ⚖️ {dish.totalweight || dish.totalWeight || 0} г
+          </Typography>
 
+          <Typography
+            sx={{
+              color: "rgba(255,255,255,0.7)",
+              fontSize: "0.95rem",
+            }}
+          >
+            🔥 {dish.calories || 0} ккал
+          </Typography>
+        </Box>
+
+        {/* Цена */}
         <Typography
           sx={{
             color: "#ff9d4d",
-            fontWeight: 700,
-            fontSize: "1.2rem",
-            mb: 0.5,
+            fontWeight: 800,
+            fontSize: "1.6rem",
+            mb: 2,
           }}
         >
           {dish.price} ₽
         </Typography>
 
-        <Box sx={{ mt: "auto", width: "100%" }}>
+        {/* Кнопки */}
+        <Box
+          sx={{
+            mt: "auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+          }}
+        >
           {isManager && onAddToOrder && (
             <Button
               fullWidth
               variant="contained"
-              sx={{
-                mb: 0.5,
-                background: "#b65c20",
-                "&:hover": { background: "#cc6c2c" },
-              }}
               onClick={() => onAddToOrder(dish)}
+              sx={{
+                background: "#b65c20",
+                "&:hover": {
+                  background: "#cc6c2c",
+                },
+              }}
             >
               Добавить
             </Button>
@@ -130,20 +154,21 @@ export default function DishCard({
                 fullWidth
                 variant="contained"
                 color="error"
-                sx={{ mb: 0.5 }}
                 onClick={() => onDelete(dish.id)}
               >
                 Удалить
               </Button>
+
               <Button
                 fullWidth
                 variant="contained"
-                sx={{
-                  mb: 0.5,
-                  background: "#b65c20",
-                  "&:hover": { background: "#cc6c2c" },
-                }}
                 onClick={() => onEditPrice(dish)}
+                sx={{
+                  background: "#b65c20",
+                  "&:hover": {
+                    background: "#cc6c2c",
+                  },
+                }}
               >
                 Изменить цену
               </Button>
@@ -154,12 +179,13 @@ export default function DishCard({
             <Button
               fullWidth
               variant="contained"
-              sx={{
-                mb: 0.5,
-                background: "#b65c20",
-                "&:hover": { background: "#cc6c2c" },
-              }}
               onClick={() => onEditRecipe(dish)}
+              sx={{
+                background: "#b65c20",
+                "&:hover": {
+                  background: "#cc6c2c",
+                },
+              }}
             >
               Состав блюда
             </Button>
