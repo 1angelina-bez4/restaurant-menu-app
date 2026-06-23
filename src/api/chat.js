@@ -1,19 +1,20 @@
-// src/api/chat.js
-export async function getAIResponse(userMessage, menuData) {
+export async function getAIResponse(userMessage, menuData, userId) {
   try {
-    // ✅ ФОРМИРУЕМ ТЕКСТ МЕНЮ С КАЛОРИЯМИ
-    const menuText = menuData.map(dish => 
-      `${dish.name}: ${dish.calories || 0} ккал, ${dish.price} ₽. ${dish.description || ''}`
-    ).join('\n');
-
-    console.log('📋 Отправляем меню текстом:\n', menuText);
+    const menuText = menuData.map(dish => {
+      let text = `${dish.name}: ${dish.calories || 0} ккал, ${dish.price} ₽`;
+      if (dish.description) {
+        text += `. ${dish.description}`;
+      }
+      return text;
+    }).join('\n');
 
     const response = await fetch('http://localhost:3001/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: userMessage,
-        menuText: menuText, // ← ПЕРЕДАЕМ ГОТОВЫЙ ТЕКСТ
+        menuText: menuText,
+        userId: userId,
       }),
     });
 

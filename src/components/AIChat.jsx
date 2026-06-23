@@ -6,7 +6,7 @@ import { Send, Close } from '@mui/icons-material';
 import { getAIResponse } from '../api/chat';
 import { supabase } from '../supabaseClient';
 
-export default function AIChat({ userId, agentId, onClose }) {
+export default function AIChat({ userId, agentId, onClose, onOrderUpdate }) { // ← добавили onOrderUpdate
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,7 +18,6 @@ export default function AIChat({ userId, agentId, onClose }) {
   useEffect(() => {
     async function loadMenu() {
       try {
-        // ✅ ДОБАВЛЯЕМ calories И totalweight
         const { data, error } = await supabase
           .from('dishes')
           .select('id, name, description, price, calories, totalweight');
@@ -51,7 +50,6 @@ export default function AIChat({ userId, agentId, onClose }) {
             })
           );
 
-          // 🔍 ЛОГ ДЛЯ ПРОВЕРКИ
           console.log('📋 Меню с калориями:', dishesWithIngredients.map(d => ({
             name: d.name,
             calories: d.calories,
@@ -101,7 +99,6 @@ export default function AIChat({ userId, agentId, onClose }) {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  
   const handleClose = () => {
     console.log('🔄 handleClose вызван!');
     setIsChatOpen(false);
@@ -123,6 +120,7 @@ export default function AIChat({ userId, agentId, onClose }) {
     const newMessages = [...messages, { role: 'user', message: userMessage }];
     setMessages(newMessages);
 
+
     try {
       await supabase.from('agent_chats').insert({
         user_id: userId,
@@ -135,9 +133,12 @@ export default function AIChat({ userId, agentId, onClose }) {
     }
 
     try {
-      const reply = await getAIResponse(userMessage, menuData);
+
+      const reply = await getAIResponse(userMessage, menuData, userId);
+      
       const updated = [...newMessages, { role: 'assistant', message: reply }];
       setMessages(updated);
+
 
       try {
         await supabase.from('agent_chats').insert({
@@ -148,6 +149,18 @@ export default function AIChat({ userId, agentId, onClose }) {
         });
       } catch (error) {
         console.log('⚠️ Не удалось сохранить ответ в БД:', error.message);
+      }
+
+      
+      if (
+        reply.includes('добавлена в корзину') || 
+        reply.includes('корзину') || 
+        reply.includes('Ваша корзина')
+      ) {
+        console.log('🔄 Обнаружено изменение корзины, обновляем...');
+        if (onOrderUpdate) {
+          onOrderUpdate();
+        }
       }
     } catch (error) {
       console.error('❌ Ошибка получения ответа:', error);

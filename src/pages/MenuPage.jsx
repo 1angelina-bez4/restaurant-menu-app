@@ -148,6 +148,16 @@ export default function MenuPage() {
     }
   };
 
+  const refreshOrders = async () => {
+    await loadOrders();
+    setForceUpdateKey(prev => prev + 1);
+  };
+  const handleOrderUpdate = async () => {
+  console.log('🔄 Обновляем заказы...');
+  await loadOrders();
+  setForceUpdateKey(prev => prev + 1);
+};
+
   // 🔍 ФИЛЬТРАЦИЯ БЛЮД
   useEffect(() => {
     let result = [...dishes];
@@ -659,9 +669,10 @@ export default function MenuPage() {
             userId={userId} 
             agentId="a0c15523-fedd-4bbd-a42a-5437fc832d3c" 
             onClose={() => {
-              console.log('📞 onClose из MenuPage вызван!');
               setShowChat(false);
+              handleOrderUpdate();
             }}
+             onOrderUpdate={handleOrderUpdate} 
           />
         )}
       </Box>
