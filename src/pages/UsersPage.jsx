@@ -1,4 +1,3 @@
-// src/pages/UsersPage.jsx
 import { useState, useEffect } from 'react';
 import { ArrowBack } from '@mui/icons-material';
 import EditUserProfileModal from '../components/EditUserProfileModal';
@@ -24,7 +23,7 @@ import {
   Snackbar,
   Alert,
 } from '@mui/material';
-import { Search, Refresh, Edit as EditIcon } from '@mui/icons-material'; // ← добавить EditIcon
+import { Search, Refresh, Edit as EditIcon } from '@mui/icons-material'; 
 import { supabase } from '../supabaseClient';
 
 export default function UsersPage() {
@@ -55,7 +54,6 @@ export default function UsersPage() {
     if (error) {
       console.error('Ошибка загрузки пользователей:', error);
     } else {
-      // Приводим данные к нужному формату
       const formattedUsers = (data || []).map(user => ({
         ...user,
         role_id: user.role_id || 1,
