@@ -119,7 +119,6 @@ export default function SignUp(props) {
   const password = form.get("password");
   const name = form.get("name");
   
-  // 1. Создаём пользователя
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -134,14 +133,12 @@ export default function SignUp(props) {
     return;
   }
 
-  // 2. Создаём профиль в таблице profiles
   await supabase.from("profiles").insert({
     id: data.user.id,
     full_name: name,
     role_id: 1, // user
   });
 
-  // 3. Переход на Sign In
   navigate("/signin");
 
   console.log("SIGNUP DATA:", data);

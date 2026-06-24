@@ -14,7 +14,6 @@ export function useDishes() {
   }, []);
 
   const loadDishes = async () => {
-    // ✅ ПРОСТО читаем готовые данные из таблицы!
     const { data: dishesData } = await supabase
       .from("dishes")
       .select("*")
@@ -45,7 +44,6 @@ export function useDishes() {
 
     setIngredients(data || []);
 
-    // Считаем вес и калории для деталей
     const total = data?.reduce((sum, item) => sum + item.amount, 0) || 0;
     setTotalWeight(total);
 

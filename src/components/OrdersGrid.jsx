@@ -1,11 +1,11 @@
-// OrdersGrid.jsx
+
 import { Box, Typography, Button } from "@mui/material"; // ← добавить Button
 import OrderItem from "./OrderItem";
 
 export default function OrdersGrid({
   orders,
   onUpdateQuantity,
-  onCheckout, // ← добавить проп
+  onCheckout,
 }) {
   if (!orders || orders.length === 0) {
     return (
@@ -133,7 +133,7 @@ export default function OrdersGrid({
         </Box>
       </Box>
 
-      {/* ✅ Кнопка "Оформить заказ" */}
+      {/* Кнопка "Оформить заказ" */}
       {total > 0 && (
         <Box sx={{ p: 2, pt: 0 }}>
           <Button

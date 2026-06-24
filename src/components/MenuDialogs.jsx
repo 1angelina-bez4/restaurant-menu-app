@@ -34,12 +34,12 @@ export default function MenuDialogs({
   setNewDish,
   handleCreateDish,
 
-  // RecipeDialog (добавить)
+  // RecipeDialog 
   openRecipeDialog,
   setOpenRecipeDialog,
   selectedRecipeDish,
 
-  // EditDishPrice (добавить)
+  // EditDishPrice 
   openEditDishPrice,
   setOpenEditDishPrice,
   editingDish,
@@ -80,15 +80,13 @@ export default function MenuDialogs({
         onSave={handleCreateDish}
       />
 
-      {/* ✅ ДОБАВЛЯЕМ RecipeDialog */}
       <RecipeDialog
         open={openRecipeDialog}
         onClose={() => setOpenRecipeDialog(false)}
         dish={selectedRecipeDish}
-        ingredients={ingredients} // если нужно
+        ingredients={ingredients} 
       />
 
-      {/* ✅ ДОБАВЛЯЕМ EditDishPriceDialog */}
       <EditDishPriceDialog
         open={openEditDishPrice}
         onClose={() => setOpenEditDishPrice(false)}

@@ -100,7 +100,7 @@ export default function OrderItem({
             disabled
             sx={{
               minWidth: 36,
-              color: "#fff !important", // ← принудительно белый цвет
+              color: "#fff !important", 
               fontWeight: 600,
             }}
           >

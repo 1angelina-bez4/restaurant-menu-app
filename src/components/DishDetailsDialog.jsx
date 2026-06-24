@@ -13,7 +13,7 @@ export default function DishDetailsDialog({
   open,
   onClose,
   selectedDish,
-  ingredients = [], // ← значение по умолчанию
+  ingredients = [],
 }) {
   if (!selectedDish) return null;
 

@@ -137,7 +137,6 @@ export function useOrders() {
     return true;
   };
 
-  // ✅ Функция создания заказа
   const createOrder = async (orderData) => {
     const {
       data: { user },
@@ -148,7 +147,6 @@ export function useOrders() {
       return false;
     }
 
-    // 1. Получаем текущие позиции корзины
     const { data: cartItems, error: cartError } = await supabase
       .from("cart_items")
       .select(`
@@ -168,13 +166,11 @@ export function useOrders() {
       return false;
     }
 
-    // 2. Вычисляем общую сумму
     const totalPrice = cartItems.reduce(
       (sum, item) => sum + (item.dishes?.price || 0) * item.quantity,
       0
     );
 
-    // 3. Создаём заказ в таблице orders
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert([
@@ -195,7 +191,6 @@ export function useOrders() {
       return false;
     }
 
-    // 4. Создаём записи в order_items
     const orderItems = cartItems.map((item) => ({
       order_id: order.id,
       dish_id: item.dish_id,
@@ -211,7 +206,6 @@ export function useOrders() {
       return false;
     }
 
-    // 5. Очищаем корзину
     const { error: deleteError } = await supabase
       .from("cart_items")
       .delete()
@@ -221,7 +215,7 @@ export function useOrders() {
       console.error("Ошибка очистки корзины:", deleteError);
     }
 
-    // 6. Перезагружаем корзину
+    //Перезагружаем корзину
     await loadOrders();
 
     return true;

@@ -20,10 +20,10 @@ export default function ProductsPage({ roleId }) {
       id: Date.now(), // временный ID
     };
 
-    setProducts([...products, productWithId]); // добавляем в список
-    setDialogOpen(false); // закрываем диалог
+    setProducts([...products, productWithId]); 
+    setDialogOpen(false);
 
-    // очищаем форму
+    // очистка формы
     setNewProduct({
       name: "",
       weight: "",

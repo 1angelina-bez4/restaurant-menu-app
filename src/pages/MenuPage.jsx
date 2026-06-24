@@ -41,8 +41,6 @@ export default function MenuPage() {
   const [userId, setUserId] = useState(null);
   const [forceUpdateKey, setForceUpdateKey] = useState(0);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-
-  // 🔍 НОВЫЕ СОСТОЯНИЯ ДЛЯ ПОИСКА И ФИЛЬТРАЦИИ
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPrice, setFilterPrice] = useState("all"); // all, low, high
   const [filterCalories, setFilterCalories] = useState("all"); // all, low, high
@@ -158,11 +156,11 @@ export default function MenuPage() {
   setForceUpdateKey(prev => prev + 1);
 };
 
-  // 🔍 ФИЛЬТРАЦИЯ БЛЮД
+  // ФИЛЬТРАЦИЯ БЛЮД
   useEffect(() => {
     let result = [...dishes];
 
-    // 1. Поиск по названию
+    // Поиск по названию
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       result = result.filter(dish => 
@@ -171,14 +169,14 @@ export default function MenuPage() {
       );
     }
 
-    // 2. Фильтр по цене
+    // Фильтр по цене
     if (filterPrice === "low") {
       result = result.sort((a, b) => (a.price || 0) - (b.price || 0));
     } else if (filterPrice === "high") {
       result = result.sort((a, b) => (b.price || 0) - (a.price || 0));
     }
 
-    // 3. Фильтр по калориям
+    // Фильтр по калориям
     if (filterCalories === "low") {
       result = result.sort((a, b) => (a.calories || 0) - (b.calories || 0));
     } else if (filterCalories === "high") {
@@ -413,93 +411,184 @@ export default function MenuPage() {
             : "Склад продуктов"}
         </Typography>
 
-        {selected === "dishes" && (
+       {selected === "dishes" && (
           <>
             {/* 🔍 Панель поиска и фильтров */}
-            <Box sx={{ mb: 4, display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
+            <Box
+              sx={{
+                mb: 3,
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 2,
+                alignItems: "flex-end",
+                justifyContent: "center",
+                py: 1.5,
+                px: 0,
+              }}
+            >
               {/* Поиск */}
-              <TextField
-                placeholder="Поиск блюд..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                sx={{
-                  flex: 1,
-                  minWidth: 200,
-                  '& .MuiOutlinedInput-root': {
-                    color: '#fff',
-                    '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' },
-                  },
-                }}
-                slotProps={{  
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search sx={{ color: 'rgba(255,255,255,0.5)' }} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
+              <Box sx={{ flex: 1, minWidth: 200, maxWidth: 400 }}>
+                <Typography
+                  sx={{
+                    color: "rgba(255,255,255,0.5)",
+                    fontSize: "0.7rem",
+                    fontWeight: 600,
+                    mb: 0.5,
+                    ml: 1,
+                    letterSpacing: "1px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  🔍 Поиск
+                </Typography>
+                <TextField
+                  placeholder="Найти блюдо..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  sx={{
+                    width: "100%",
+                    "& .MuiOutlinedInput-root": {
+                      color: "#fff",
+                      borderRadius: 2,
+                      height: 44,
+                      bgcolor: "rgba(255,255,255,0.03)",
+                      "& fieldset": { borderColor: "rgba(255,255,255,0.08)" },
+                      "&:hover fieldset": { borderColor: "rgba(255,255,255,0.2)" },
+                      "&.Mui-focused fieldset": { borderColor: "#b65c20" },
+                    },
+                    "& .MuiInputBase-input": {
+                      color: "#fff",
+                      py: 1,
+                    },
+                  }}
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Search sx={{ color: "rgba(255,255,255,0.3)", fontSize: 20 }} />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </Box>
 
               {/* Фильтр по цене */}
-              <FormControl sx={{ minWidth: 150 }}>
-                <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>Цена</InputLabel>
+              <Box sx={{ minWidth: 140 }}>
+                <Typography
+                  sx={{
+                    color: "rgba(255,255,255,0.5)",
+                    fontSize: "0.7rem",
+                    fontWeight: 600,
+                    mb: 0.5,
+                    ml: 1,
+                    letterSpacing: "1px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  💰 Цена
+                </Typography>
                 <Select
                   value={filterPrice}
                   onChange={(e) => setFilterPrice(e.target.value)}
+                  displayEmpty
                   sx={{
-                    color: '#fff',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
-                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
-                    '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
+                    color: "#fff",
+                    borderRadius: 2,
+                    height: 44,
+                    minWidth: 140,
+                    bgcolor: "rgba(255,255,255,0.03)",
+                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.08)" },
+                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.2)" },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#b65c20" },
+                    "& .MuiSvgIcon-root": { color: "rgba(255,255,255,0.4)" },
+                    "& .MuiSelect-select": { py: 1 },
                   }}
                 >
                   <MenuItem value="all">Все цены</MenuItem>
-                  <MenuItem value="low">Сначала дешевле</MenuItem>
-                  <MenuItem value="high">Сначала дороже</MenuItem>
+                  <MenuItem value="low">⬆️ Сначала дешевле</MenuItem>
+                  <MenuItem value="high">⬇️ Сначала дороже</MenuItem>
                 </Select>
-              </FormControl>
+              </Box>
 
               {/* Фильтр по калориям */}
-              <FormControl sx={{ minWidth: 150 }}>
-                <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>Калории</InputLabel>
+              <Box sx={{ minWidth: 140 }}>
+                <Typography
+                  sx={{
+                    color: "rgba(255,255,255,0.5)",
+                    fontSize: "0.7rem",
+                    fontWeight: 600,
+                    mb: 0.5,
+                    ml: 1,
+                    letterSpacing: "1px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  🔥 Калории
+                </Typography>
                 <Select
                   value={filterCalories}
                   onChange={(e) => setFilterCalories(e.target.value)}
+                  displayEmpty
                   sx={{
-                    color: '#fff',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
-                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
-                    '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
+                    color: "#fff",
+                    borderRadius: 2,
+                    height: 44,
+                    minWidth: 140,
+                    bgcolor: "rgba(255,255,255,0.03)",
+                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.08)" },
+                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.2)" },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#b65c20" },
+                    "& .MuiSvgIcon-root": { color: "rgba(255,255,255,0.4)" },
+                    "& .MuiSelect-select": { py: 1 },
                   }}
                 >
                   <MenuItem value="all">Все калории</MenuItem>
-                  <MenuItem value="low">Сначала меньше</MenuItem>
-                  <MenuItem value="high">Сначала больше</MenuItem>
+                  <MenuItem value="low">⬆️ Сначала меньше</MenuItem>
+                  <MenuItem value="high">⬇️ Сначала больше</MenuItem>
                 </Select>
-              </FormControl>
-
-              {/* Кнопка сброса фильтров */}
-              {(searchQuery || filterPrice !== "all" || filterCalories !== "all") && (
-                <Chip
-                  label="Сбросить фильтры"
-                  onClick={clearFilters}
-                  sx={{
-                    color: '#fff',
-                    borderColor: 'rgba(255,255,255,0.3)',
-                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' },
-                  }}
-                  variant="outlined"
-                />
-              )}
+              </Box>
             </Box>
 
-            {/* Информация о количестве блюд */}
-            <Typography sx={{ color: 'rgba(255,255,255,0.5)', mb: 2 }}>
-              Найдено: {filteredDishes.length} блюд
-            </Typography>
+            {/* 📊 Счетчик найденных блюд */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 3,
+                pb: 1.5,
+                borderBottom: "1px solid rgba(255,255,255,0.05)",
+              }}
+            >
+              <Typography
+                sx={{
+                  color: "rgba(255,255,255,0.4)",
+                  fontSize: "0.85rem",
+                }}
+              >
+                🍽️ Найдено: <strong style={{ color: "#ff9d4d", fontWeight: 700 }}>
+                  {filteredDishes.length}
+                </strong> блюд
+              </Typography>
+
+              {(searchQuery || filterPrice !== "all" || filterCalories !== "all") && (
+                <Button
+                  onClick={clearFilters}
+                  size="small"
+                  sx={{
+                    color: "rgba(255,255,255,0.4)",
+                    fontSize: "0.75rem",
+                    textTransform: "none",
+                    "&:hover": { color: "#fff" },
+                  }}
+                >
+                  ✕ Сбросить
+                </Button>
+              )}
+            </Box>
           </>
         )}
-
         {selected === "dishes" ? (
           <Box
             sx={{

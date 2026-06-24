@@ -1,4 +1,3 @@
-// src/pages/ProfilePage.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // ← добавить
 import { ArrowBack } from '@mui/icons-material';
@@ -20,7 +19,7 @@ import { supabase } from '../supabaseClient';
 import { uploadAvatar } from '../utils/uploadAvatar';
 
 export default function ProfilePage() {
-  const navigate = useNavigate(); // ← добавить
+  const navigate = useNavigate(); 
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
